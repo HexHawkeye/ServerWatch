@@ -1,0 +1,15 @@
+@page
+@model IndexModel
+@{ ViewData["Title"]="Dashboard"; var allHealthy=Model.Monitors.Count>0&&Model.UnhealthyCount==0&&Model.WarningCount==0&&Model.Monitors.All(x=>x.Latest is not null); }
+<section class="hero"><div><div class="eyebrow">// LIVE INFRASTRUCTURE MONITORING</div><h1>Systems at a glance.</h1><p>Ping, TCP, HTTP and SQL health checks run automatically in the background. This page refreshes every 15 seconds.</p></div><div class="overall @(allHealthy?"healthy-box":"warning-box")"><i></i> @(allHealthy?"ALL SYSTEMS OPERATIONAL":Model.UnhealthyCount>0?$"{Model.UnhealthyCount} SYSTEMS NEED ATTENTION":Model.WarningCount>0?$"{Model.WarningCount} TRANSIENT WARNINGS":"CHECKS STARTING")</div></section>
+<section class="stats five-stats"><article><small>MONITORS</small><strong>@Model.Monitors.Count</strong><span>configured targets</span></article><article><small>HEALTHY</small><strong class="green-text">@Model.HealthyCount</strong><span>latest checks passed</span></article><article><small>WARNING</small><strong class="amber-text">@Model.WarningCount</strong><span>below failure threshold</span></article><article><small>UNHEALTHY</small><strong class="red-text">@Model.UnhealthyCount</strong><span>threshold reached</span></article><article><small>INCIDENTS</small><strong>@Model.IncidentCount</strong><span>new outages in 24 hours</span></article></section>
+<div class="section-title"><div><span>// 01</span><h2>Infrastructure</h2></div><a class="button" href="/Monitors">MANAGE MONITORS →</a></div>
+<section class="panel"><div class="table-head phase2"><span>STATUS</span><span>NAME</span><span>HOST</span><span>CHECK</span><span>RESPONSE</span><span>LAST CHECK</span></div>@foreach(var row in Model.Monitors){var t=row.Target;var r=row.Latest;var status=r?.Status??"Pending";<a class="table-row phase2 row-link" href="/History?id=@t.Id"><span><b class="dot @(status=="Healthy"?"online":status=="Warning"?"warning":"offline")"></b> @status.ToUpperInvariant()</span><strong>@t.Name</strong><code>@t.Host</code><span>@t.CheckType</span><span>@(r?.ResponseTimeMs is null?"—":$"{r.ResponseTimeMs} ms")</span><span title="@(r?.CheckedUtc.ToString("u")??"Not checked")">@(r is null?"—":r.CheckedUtc.ToLocalTime().ToString("HH:mm:ss"))</span></a>}</section>
+<section class="terminal"><div class="terminal-top"><span>serverwatch://engine</span><span>● ● ●</span></div><pre><em>$</em> serverwatch status --live
+<span>✓</span> monitoring worker running
+<span>✓</span> results persisted to SQLite
+<span>✓</span> thresholds and recovery alerts enabled
+<em>→</em> next dashboard refresh in 15 seconds
+
+<span class="cursor">█</span></pre></section>
+@section Scripts { <script>setTimeout(()=>location.reload(),15000);</script> }

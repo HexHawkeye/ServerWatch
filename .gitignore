@@ -1,0 +1,8 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+ServerWatch.Web/serverwatch.db
+ServerWatch.Web/serverwatch.db-shm
+ServerWatch.Web/serverwatch.db-wal
