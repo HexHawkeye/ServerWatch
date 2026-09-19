@@ -3,6 +3,9 @@ obj/
 .vs/
 *.user
 *.suo
+.env
+appsettings.Production.json
+data-protection-keys/
 ServerWatch.Web/serverwatch.db
 ServerWatch.Web/serverwatch.db-shm
 ServerWatch.Web/serverwatch.db-wal

@@ -1,0 +1,13 @@
+services:
+  serverwatch:
+    build: .
+    ports: ["8080:8080"]
+    volumes: ["serverwatch-data:/data"]
+    environment:
+      Admin__Username: admin
+      Admin__PasswordSha256: ${SERVERWATCH_ADMIN_PASSWORD_SHA256}
+      Alerts__Smtp__Password: ${SERVERWATCH_SMTP_PASSWORD:-}
+      DataProtection__KeysPath: /data/keys
+    restart: unless-stopped
+volumes:
+  serverwatch-data:

@@ -7,6 +7,7 @@ public static class DatabaseUpgrade
     public static async Task ApplyAsync(ServerWatchDbContext db)
     {
         await db.Database.EnsureCreatedAsync();
+        if (!db.Database.IsSqlite()) return;
         await AddColumnIfMissingAsync(db, "MonitorTargets", "IntervalSeconds", "INTEGER NOT NULL DEFAULT 60");
         await AddColumnIfMissingAsync(db, "MonitorTargets", "TimeoutSeconds", "INTEGER NOT NULL DEFAULT 5");
         await AddColumnIfMissingAsync(db, "MonitorTargets", "ConnectionString", "TEXT NULL");

@@ -1,0 +1,7 @@
+using System.Security.Claims;using System.Security.Cryptography;using System.Text;using Microsoft.AspNetCore.Authentication;using Microsoft.AspNetCore.Authentication.Cookies;using Microsoft.AspNetCore.Mvc;using Microsoft.AspNetCore.Mvc.RazorPages;
+namespace ServerWatch.Web.Pages;
+public class LoginModel(IConfiguration config):PageModel
+{
+ [BindProperty]public string Username{get;set;}="";[BindProperty]public string Password{get;set;}="";public string? Error{get;set;}
+ public async Task<IActionResult> OnPostAsync(string? returnUrl=null){var expectedUser=config["Admin:Username"]??"admin";var expectedHash=config["Admin:PasswordSha256"]??"";var supplied=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Password))).ToLowerInvariant();if(!string.Equals(Username,expectedUser,StringComparison.OrdinalIgnoreCase)||!CryptographicOperations.FixedTimeEquals(Encoding.ASCII.GetBytes(supplied),Encoding.ASCII.GetBytes(expectedHash))){Error="Invalid username or password.";return Page();}var identity=new ClaimsIdentity([new Claim(ClaimTypes.Name,Username),new Claim(ClaimTypes.Role,"Administrator")],CookieAuthenticationDefaults.AuthenticationScheme);await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,new ClaimsPrincipal(identity),new AuthenticationProperties{IsPersistent=true,ExpiresUtc=DateTimeOffset.UtcNow.AddHours(12)});return LocalRedirect(Url.IsLocalUrl(returnUrl)?returnUrl:"/");}
+}

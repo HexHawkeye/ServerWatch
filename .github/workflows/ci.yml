@@ -1,0 +1,16 @@
+name: build-and-test
+on:
+  push:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore ServerWatch.sln
+      - run: dotnet build ServerWatch.sln --configuration Release --no-restore
+      - run: dotnet test ServerWatch.Tests/ServerWatch.Tests.csproj --configuration Release --no-build
+      - run: docker build -t serverwatch:ci .

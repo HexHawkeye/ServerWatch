@@ -1,0 +1,1 @@
+using Microsoft.AspNetCore.Mvc.RazorPages;namespace ServerWatch.Web.Pages;public class ErrorModel:PageModel{public string RequestId{get;private set;}="";public void OnGet()=>RequestId=System.Diagnostics.Activity.Current?.Id??HttpContext.TraceIdentifier;}

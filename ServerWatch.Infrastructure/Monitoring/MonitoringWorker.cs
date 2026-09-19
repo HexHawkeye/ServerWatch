@@ -12,10 +12,10 @@ public sealed class MonitoringWorker(IServiceScopeFactory scopeFactory,IEnumerab
    var previous=await db.CheckResults.AsNoTracking().Where(x=>x.MonitorTargetId==target.Id).OrderByDescending(x=>x.CheckedUtc).FirstOrDefaultAsync(ct);var forced=runQueue.Take(target.Id);
    if(!forced&&previous is not null&&previous.CheckedUtc.AddSeconds(Math.Max(10,target.IntervalSeconds))>DateTime.UtcNow)continue;
    if(!_checks.TryGetValue(target.CheckType,out var check)){logger.LogWarning("Unknown check type {CheckType} for {Monitor}",target.CheckType,target.Name);continue;}
-   var outcome=await check.ExecuteAsync(target,ct);var failures=outcome.IsHealthy?0:(previous?.ConsecutiveFailures??0)+1;var threshold=Math.Max(1,target.FailureThreshold);var status=outcome.IsHealthy?"Healthy":failures>=threshold?"Unhealthy":"Warning";var previousStatus=previous?.Status;if(string.IsNullOrWhiteSpace(previousStatus)&&previous is not null)previousStatus=previous.IsHealthy?"Healthy":"Unhealthy";
+   var outcome=await check.ExecuteAsync(target,ct);var (status,failures)=HealthStatePolicy.Evaluate(outcome.IsHealthy,previous?.ConsecutiveFailures??0,target.FailureThreshold);var previousStatus=previous?.Status;if(string.IsNullOrWhiteSpace(previousStatus)&&previous is not null)previousStatus=previous.IsHealthy?"Healthy":"Unhealthy";
    var result=new CheckResult{MonitorTargetId=target.Id,IsSuccessful=outcome.IsHealthy,IsHealthy=status=="Healthy",Status=status,ConsecutiveFailures=failures,ResponseTimeMs=outcome.ResponseTimeMs,Message=outcome.Message.Length>500?outcome.Message[..500]:outcome.Message,CheckedUtc=DateTime.UtcNow,StatusChanged=previous is null||!string.Equals(previousStatus,status,StringComparison.OrdinalIgnoreCase)};
    db.CheckResults.Add(result);await db.SaveChangesAsync(ct);
-   if(previous is not null&&status=="Unhealthy"&&previousStatus!="Unhealthy")await alerts.SendFailureAsync(target,result,ct);else if(previousStatus=="Unhealthy"&&status=="Healthy")await alerts.SendRecoveryAsync(target,result,ct);
+   if(HealthStatePolicy.IsFailureAlert(previousStatus,status))await alerts.SendFailureAsync(target,result,ct);else if(HealthStatePolicy.IsRecoveryAlert(previousStatus,status))await alerts.SendRecoveryAsync(target,result,ct);
    logger.LogInformation("{Monitor}: {Status} ({ResponseTime} ms){Forced}",target.Name,status,outcome.ResponseTimeMs,forced?" [manual]":"");
   }
  }
