@@ -164,6 +164,4 @@ The GitHub Actions workflow performs the same build and tests, then verifies tha
 - Restrict access to the Settings page and downloaded database backups.
 - Store production secrets in environment variables or a dedicated secret manager.
 
-## License
 
-Add a `LICENSE` file before distributing the project publicly. Until a license is added, the repository remains all rights reserved by default.
